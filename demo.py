@@ -146,6 +146,34 @@ class Demo:
             plt.savefig('demo_imgs/output.png')
         else:
             plt.show()
+        
+        
+        # ---------------------
+        import os
+        import glob
+        from skimage.io import imsave
+
+        tmp_dir = "./tmp"
+
+        # 一時保存ディレクトリを作成
+        if not os.path.exists(tmp_dir):
+            os.makedirs(tmp_dir)
+
+        def make_gif():
+            """連番画像からGIFを生成する"""
+            with imageio.get_writer("output.gif", mode='I') as writer:
+                for filename in sorted(glob.glob(os.path.join(tmp_dir, '_tmp_*.png'))):
+                    writer.append_data(imageio.imread(filename))
+                    os.remove(filename)
+            writer.close()
+        
+        for i in range(0, 360, 4):
+            # 0~360度回転させながら画像を保存する.
+            rendered_img, _, _ = self.renderer.render(self.pred_vertices, self.pred_cam_t, uvmap, euler=[0, i, 0])
+            rendered_img = rendered_img[0].cpu().permute(1, 2, 0).numpy()
+            imsave(os.path.join(tmp_dir, '_tmp_%04d.png') % i, rendered_img)
+
+        make_gif()
 
 
 if __name__ == '__main__':
